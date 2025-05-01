@@ -1,27 +1,35 @@
 #!/bin/bash
 
-# CONFIG
+# Auto Backup Semua Database MySQL ke Google Drive
+# By Jefri 🦾
+
 DB_USER="root"
 DB_PASS="passwordmu"
-DB_NAME="nama_database"
 BACKUP_DIR="/root/db_backup"
 DATE=$(date +"%Y-%m-%d-%H-%M")
-BACKUP_FILE="${DB_NAME}-${DATE}.sql"
 REMOTE_NAME="gdrive"
 REMOTE_FOLDER="backup-mysql"
 
-# Buat folder lokal backup
+# DB bawaan yang tidak perlu dibackup
+SKIP_DB=("information_schema" "performance_schema" "mysql" "sys")
+
+# Buat folder backup lokal
 mkdir -p $BACKUP_DIR
 
-# Export database
-echo "📦 Membackup database $DB_NAME..."
-mysqldump -u $DB_USER -p$DB_PASS $DB_NAME > $BACKUP_DIR/$BACKUP_FILE
+# Ambil semua nama database
+echo "📋 Mengambil daftar database..."
+DATABASES=$(mysql -u $DB_USER -p$DB_PASS -e "SHOW DATABASES;" | grep -Ev "Database|$(IFS='|'; echo "${SKIP_DB[*]}")")
 
-# Upload ke Google Drive
-echo "☁️ Mengupload ke Google Drive..."
-rclone copy $BACKUP_DIR/$BACKUP_FILE ${REMOTE_NAME}:${REMOTE_FOLDER}
+# Loop & backup tiap database
+for DB in $DATABASES; do
+    BACKUP_FILE="${DB}-${DATE}.sql"
+    echo "📦 Membackup $DB..."
+    mysqldump -u $DB_USER -p$DB_PASS $DB > $BACKUP_DIR/$BACKUP_FILE
 
-# Hapus file lokal
-rm $BACKUP_DIR/$BACKUP_FILE
+    echo "☁️ Mengupload $BACKUP_FILE ke Google Drive..."
+    rclone copy $BACKUP_DIR/$BACKUP_FILE ${REMOTE_NAME}:${REMOTE_FOLDER}
+    
+    rm $BACKUP_DIR/$BACKUP_FILE
+done
 
-echo "✅ Backup sukses: $BACKUP_FILE"
+echo "✅ Semua database berhasil dibackup & diupload ke Google Drive!"
