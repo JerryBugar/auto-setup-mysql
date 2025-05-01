@@ -25,7 +25,7 @@ sudo systemctl restart mysql
 echo "👤 Membuat user MySQL untuk remote access..."
 
 REMOTE_USER="jefri"
-REMOTE_PASS="passwordmu"   # Ganti nanti kalau mau lebih aman
+REMOTE_PASS="Jerry@111*"   # Ganti nanti kalau mau lebih aman
 
 sudo mysql -e "CREATE USER IF NOT EXISTS '$REMOTE_USER'@'%' IDENTIFIED BY '$REMOTE_PASS';"
 sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO '$REMOTE_USER'@'%' WITH GRANT OPTION;"
